@@ -1,0 +1,25 @@
+# Python files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+
+# Virtual Env
+venv/
+.env/
+env/
+
+# Logs
+log.txt
+*.log
+
+# test files
+test*.py
+
+# VSCode
+.vscode/
