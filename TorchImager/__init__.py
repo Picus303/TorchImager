@@ -124,6 +124,7 @@ class Window:
             tensor = tensor.contiguous()
 
         # Update the window with the tensor's data pointer
+        torch.cuda.synchronize()
         self.window.update(tensor.data_ptr())
 
     def show(self, tensor: torch.Tensor):
