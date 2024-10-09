@@ -19,6 +19,16 @@ TorchImager is available on PyPI and can be installed via:
 pip install TorchImager
 ```
 
+**Note**: TorchImager is currently being tested in Python 3.12 but probably works in lower versions. You can use `--ignore-requires-python` to install it on any version.
+
+## Requirements
+
+- ROCm/HIP
+- OpenGL
+- GLFW3
+- GLEW
+- Pybind11
+
 ## Usage Examples
 
 ### Example 1: Display a Grayscale Tensor
