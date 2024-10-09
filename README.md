@@ -107,6 +107,8 @@ Here's a quick overview of our priorities for future development:
 
 - Add Windows support
 
+- Add the possibility to export tensors as images or record their state as a video
+
 ## How to Contribute
 
 We welcome contributions from the community! If you'd like to help with any of the improvements or fixes mentioned in the roadmap, feel free to fork the repository and submit a pull request.
