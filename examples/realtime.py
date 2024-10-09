@@ -1,11 +1,10 @@
 import torch
-
 from TorchImager import Window
 
 height, width = 512, 512
 
 try:
-	with Window(width, height, "grayscale", 0.5) as window:
+	with Window(width, height, "grayscale", 2) as window:
 		while True:
 			tensor = torch.rand(height, width)
 			window.update(tensor)

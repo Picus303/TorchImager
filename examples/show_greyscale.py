@@ -1,5 +1,4 @@
 import torch
-
 from TorchImager import Window
 
 height, width = 512, 512
