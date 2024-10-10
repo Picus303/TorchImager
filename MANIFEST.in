@@ -1,2 +1,3 @@
 include CMakeLists.txt
+include TorchImager/main.cu
 include TorchImager/main.hip
