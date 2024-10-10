@@ -114,6 +114,9 @@ public:
         // Set the current OpenGL context to the window before rendering
         glfwMakeContextCurrent(window);
 
+        // Disable v-sync to prevent being limited by screen refresh rate
+        glfwSwapInterval(0);
+
         // Determine the number of channels
         int numChannels = isColor ? 3 : 1;
 

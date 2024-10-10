@@ -121,10 +121,6 @@ class Window:
             assert size[0] == 3, "Color tensor must have 3 channels."
             assert size[1] == self.height, f"Color tensor height must be {self.height}."
             assert size[2] == self.width, f"Color tensor width must be {self.width}."
-            
-		# Ensure the tensor is contiguous in memory
-        if not tensor.is_contiguous():
-            tensor = tensor.contiguous()
 
         # Normalize the tensor data to the range [0, 1]
         if self.auto_norm:
@@ -133,6 +129,14 @@ class Window:
             normalized_tensor /= normalized_tensor.max()
         else:
             normalized_tensor = tensor
+        
+        # Reorder the tensor dimensions for display
+        if self.type == "color":
+            normalized_tensor = normalized_tensor.permute(1, 2, 0)
+
+        # Ensure the tensor is contiguous in memory
+        if not normalized_tensor.is_contiguous():
+            normalized_tensor = normalized_tensor.contiguous()
 
         # Update the window with the tensor's data pointer
         torch.cuda.synchronize()
