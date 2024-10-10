@@ -34,7 +34,7 @@ class Window:
         Closes the window and releases any associated resources.
     """
 
-    def __init__(self, width: int, height: int, type: str, scale: float = 1.0):
+    def __init__(self, width: int, height: int, type: str, scale: float = 1.0, auto_norm: bool = False):
         """
         Initializes the Window object with the given parameters.
 
@@ -48,6 +48,8 @@ class Window:
             The type of the window ('grayscale' or 'color').
         scale : float, optional
             The scale factor for enlarging or shrinking the window (default is 1.0).
+        auto_norm : bool, optional
+            Whether to normalize the tensor data to the range [0, 1] before displaying it (default is False).
 
         Raises:
         -------
@@ -58,6 +60,7 @@ class Window:
         self.height = height
         self.type = type
         self.scale = scale
+        self.auto_norm = auto_norm
 
         # Ensure the input parameters are valid
         assert self.width > 0, "Width must be greater than 0."
@@ -123,9 +126,17 @@ class Window:
         if not tensor.is_contiguous():
             tensor = tensor.contiguous()
 
+        # Normalize the tensor data to the range [0, 1]
+        if self.auto_norm:
+            normalized_tensor = tensor.clone()
+            normalized_tensor -= normalized_tensor.min()
+            normalized_tensor /= normalized_tensor.max()
+        else:
+            normalized_tensor = tensor
+
         # Update the window with the tensor's data pointer
         torch.cuda.synchronize()
-        self.window.update(tensor.data_ptr())
+        self.window.update(normalized_tensor.data_ptr())
 
     def show(self, tensor: torch.Tensor):
         """
