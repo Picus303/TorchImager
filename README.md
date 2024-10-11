@@ -84,7 +84,6 @@ except KeyboardInterrupt:
 TorchImager is in **alpha** and has some significant limitations:
 
 - **Linux only**: The library currently works only on Linux.
-- **One window at a time**: Currently, only one display window can be open at a time.
 
 We are actively working on addressing these limitations and plan to:
 
@@ -98,8 +97,8 @@ Here's a quick overview of our priorities for future development:
 
 ### Issues
 
-- Prevent memory leaks from happening when opening multiple windows at the same time
-- Find the cause of the `segmentation fault (core dumped)` error when opening multiple windows in a row
+- Prevent memory leaks from happening when opening multiple windows at the same time (AMD only)
+- Find the cause of the `segmentation fault (core dumped)` error when opening multiple windows in a row (AMD only)
 - Investigate the white lines appearing when using large window sizes in the Lenia example
 
 ### Improvements
