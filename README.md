@@ -4,6 +4,13 @@ TorchImager is a lightweight library for visualizing 2D tensors directly from Py
 
 **Note**: TorchImager is in its early alpha stage and is under active development. Some stability issues might happen out of the tested use cases.
 
+<p align="center">
+    <img src="images/color.png" width="400" />
+    <img src="images/greyscale.png" width="400" />
+    <img src="images/kernel.png" width="400" />
+    <img src="images/lenia.png" width="400" />
+</p>
+
 ## Features
 
 - Display 2D tensors in **grayscale** and **color**.
@@ -98,6 +105,7 @@ Here's a quick overview of our priorities for future development:
 
 - Prevent memory leaks from happening when opening multiple windows at the same time
 - Find the cause of the `segmentation fault (core dumped)` error when opening multiple windows in a row
+- Investigate the white lines appearing when using large window sizes in the Lenia example
 
 ### Improvements
 
@@ -108,6 +116,7 @@ Here's a quick overview of our priorities for future development:
 - Add Windows support
 
 - Add the possibility to export tensors as images or record their state as a video
+- Add the possibility to show values as text over the image
 
 ## How to Contribute
 
