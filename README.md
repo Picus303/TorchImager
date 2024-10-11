@@ -28,7 +28,7 @@ pip install TorchImager
 
 ## Requirements
 
-- ROCm/HIP
+- HIP/CUDA
 - OpenGL
 - GLFW3
 - GLEW
@@ -88,7 +88,6 @@ TorchImager is in **alpha** and has some significant limitations:
 We are actively working on addressing these limitations and plan to:
 
 - Add support for **multi-platform** (Windows, Mac).
-- Enable **multiple windows** at the same time.
 - Optimize resource usage and window management.
 
 ## Roadmap
