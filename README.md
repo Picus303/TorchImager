@@ -1,6 +1,6 @@
 # TorchImager
 
-TorchImager is a lightweight library for visualizing 2D tensors directly from PyTorch using OpenGL and HIP (AMD GPU) interop. It supports both grayscale and color images. TorchImager is designed to be simple to use while being performant by displaying tensors directly on the GPU without transferring data back to the CPU.
+TorchImager is a lightweight library for visualizing 2D tensors directly from PyTorch using OpenGL and HIP/CUDA interop. It supports both grayscale and color images. TorchImager is designed to be simple to use while being performant by displaying tensors directly on the GPU without transferring data back to the CPU.
 
 **Note**: TorchImager is in its early alpha stage and is under active development. Some stability issues might happen out of the tested use cases.
 
@@ -26,15 +26,12 @@ TorchImager is available on PyPI and can be installed via:
 pip install TorchImager
 ```
 
-**Note**: TorchImager is currently being tested in Python 3.12 but probably works in lower versions. You can use `--ignore-requires-python` to install it on any version.
-
 ## Requirements
 
 - ROCm/HIP
 - OpenGL
 - GLFW3
 - GLEW
-- Pybind11
 
 ## Usage Examples
 
@@ -87,13 +84,11 @@ except KeyboardInterrupt:
 TorchImager is in **alpha** and has some significant limitations:
 
 - **Linux only**: The library currently works only on Linux.
-- **AMD GPUs only (HIP)**: The library uses HIP for GPU interop and is designed for AMD GPUs.
 - **One window at a time**: Currently, only one display window can be open at a time.
 
 We are actively working on addressing these limitations and plan to:
 
 - Add support for **multi-platform** (Windows, Mac).
-- Extend support to **NVIDIA GPUs** via **CUDA**.
 - Enable **multiple windows** at the same time.
 - Optimize resource usage and window management.
 
@@ -108,10 +103,6 @@ Here's a quick overview of our priorities for future development:
 - Investigate the white lines appearing when using large window sizes in the Lenia example
 
 ### Improvements
-
-- Add CUDA support:
-	- Make a CUDA version of `main.hip` (files: `main.cu`)
-	- Adapt the build process (files: `CMakeLists.txt`, `setup.py`)
 
 - Add Windows support
 
