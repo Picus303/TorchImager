@@ -34,7 +34,7 @@ class Window:
         Closes the window and releases any associated resources.
     """
 
-    def __init__(self, width: int, height: int, type: str, scale: float = 1.0):
+    def __init__(self, width: int, height: int, type: str, scale: float = 1.0, device: int = None):
         """
         Initializes the Window object with the given parameters.
 
@@ -48,6 +48,8 @@ class Window:
             The type of the window ('grayscale' or 'color').
         scale : float, optional
             The scale factor for enlarging or shrinking the window (default is 1.0).
+        device : int, optional
+            The GPU device to use for rendering. If None, the current device is used.
 
         Raises:
         -------
@@ -64,6 +66,9 @@ class Window:
         assert self.height > 0, "Height must be greater than 0."
         assert self.scale > 0, "Scale must be greater than 0."
         assert self.type in ["grayscale", "color"], "Type must be 'grayscale' or 'color'."
+
+        self.device = device if device is not None else torch.cuda.current_device()
+        self.device = torch.cuda.get_device_name(self.device)
 
         self.initialize()
 
@@ -87,7 +92,7 @@ class Window:
         is_color = True if self.type == "color" else False
         self.window = ld.DisplayWindow(self.width, self.height, self.scale, is_color)
 
-        if not self.window.initialize():
+        if not self.window.initialize(self.device):
             raise RuntimeError("Failed to initialize window. (C++ error)")
 
     def update(self, tensor: torch.Tensor):

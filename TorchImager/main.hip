@@ -27,7 +27,7 @@ public:
     }
 
     // Method to initialize GLFW, GLEW, and create the window
-    bool initialize() {
+    bool initialize(const std::string& deviceName) {
         // Lock the mutex to ensure thread-safe initialization of GLFW
         std::lock_guard<std::mutex> lock(glfwMutex);
 
@@ -62,13 +62,29 @@ public:
 
         // Check compatibility between OpenGL and HIP
         unsigned int deviceCount;
-        int devices[1];  // We only care about one device for now
-        HIP_ASSERT(hipGLGetDevices(&deviceCount, devices, 1, hipGLDeviceListAll));
+        int devices[16];  // Check up to 16 devices
+        
+        HIP_ASSERT(hipGLGetDevices(&deviceCount, devices, 16, hipGLDeviceListAll));
         if (deviceCount == 0) {
             std::cerr << "No HIP devices compatible with OpenGL found" << std::endl;
             return false;
-        } else {
-            HIP_ASSERT(hipSetDevice(devices[0]));  // Set the HIP device
+        }
+
+        // Get the device ID for the specified device name
+        bool deviceFound = false;
+        for (unsigned int i = 0; i < deviceCount; i++) {
+            hipDeviceProp_t deviceProp;
+            HIP_ASSERT(hipGetDeviceProperties(&deviceProp, devices[i]));
+            if (deviceName == deviceProp.name) {
+                HIP_ASSERT(hipSetDevice(devices[i]));
+                deviceFound = true;
+                break;
+            }
+        }
+
+        if (!deviceFound) {
+            std::cerr << "Device " << deviceName << " not found" << std::endl;
+            return false;
         }
 
         // Determine the number of channels and OpenGL texture format

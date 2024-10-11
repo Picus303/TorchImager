@@ -28,7 +28,7 @@ public:
     }
 
     // Method to initialize GLFW, GLEW, and create the window
-    bool initialize() {
+    bool initialize(const std::string& deviceName) {
         // Lock the mutex to ensure thread-safe initialization of GLFW
         std::lock_guard<std::mutex> lock(glfwMutex);
 
@@ -63,13 +63,30 @@ public:
 
         // Check compatibility between OpenGL and CUDA
         unsigned int deviceCount;
-        int devices[1];  // We only care about one device for now
-        CUDA_ASSERT(cudaGLGetDevices(&deviceCount, devices, 1, cudaGLDeviceListAll));
+        int devices[16];    // Check up to 16 devices
+
+        CUDA_ASSERT(cudaGLGetDevices(&deviceCount, devices, 16, cudaGLDeviceListAll));
         if (deviceCount == 0) {
             std::cerr << "No CUDA devices compatible with OpenGL found" << std::endl;
             return false;
         }
-        CUDA_ASSERT(cudaSetDevice(devices[0]));  // Set the CUDA device
+        
+        // Get the device ID for the specified device name
+        bool deviceFound = false;
+        for (unsigned int i = 0; i < deviceCount; i++) {
+            cudaDeviceProp prop;
+            cudaGetDeviceProperties(&prop, devices[i]);
+            if (deviceName == prop.name) {
+                CUDA_ASSERT(cudaSetDevice(devices[i]));
+                deviceFound = true;
+                break;
+            }
+        }
+
+        if (!deviceFound) {
+            std::cerr << "Device " << deviceName << " not found" << std::endl;
+            return false;
+        }
 
         // Determine the number of channels and OpenGL texture format
         int numChannels = isColor ? 3 : 1;  // 3 channels for RGB, 1 for grayscale
