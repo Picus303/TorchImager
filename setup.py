@@ -18,9 +18,15 @@ class CleanInstall(install):
                 if any(file.endswith(ext) for ext in extensions):
                     os.remove(os.path.join(root, file))
 
+nvcc_path = shutil.which("nvcc")
 hipcc_path = shutil.which("hipcc")
-if hipcc_path is None:
-    raise RuntimeError("hipcc not found. Please ensure HIP/ROCm is installed and accessible in your PATH.")
+
+if nvcc_path:
+     compiler_choice = "-DUSE_CUDA=ON"
+elif hipcc_path:
+    compiler_choice = "-DUSE_HIP=ON"
+else:
+    raise RuntimeError("Neither CUDA nor HIP were found on this system.")
 
 if platform.system() != "Linux":
 	raise RuntimeError("This package is only supported on Linux.")
@@ -39,10 +45,11 @@ setup(
     cmake_install_dir="TorchImager",
     cmake_minimum_required_version="3.5",
     cmake_args=[
-        f"-DPYTHON_EXECUTABLE={sys.executable}"
+        f"-DPYTHON_EXECUTABLE={sys.executable}",
+        compiler_choice,
     ],
     include_package_data=True,
-    python_requires=">=3.12",
+    python_requires=">=3.10",
     install_requires=["torch"],
     cmdclass={"install": CleanInstall}
 )

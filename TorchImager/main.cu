@@ -2,15 +2,16 @@
 #include <pybind11/pybind11.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <hip/hip_runtime.h>
-#include <hip/hip_runtime_api.h>
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
+#include <cuda_gl_interop.h>
 #include <iostream>
 #include <mutex>
 
-// Macro to handle HIP errors and print the error message
-#define HIP_ASSERT(status) \
-    if (status != hipSuccess) { \
-        std::cerr << "HIP error: " << hipGetErrorString(status) << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+/// Macro to handle CUDA errors and print the error message
+#define CUDA_ASSERT(status) \
+    if (status != cudaSuccess) { \
+        std::cerr << "CUDA error: " << cudaGetErrorString(status) << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
         return false; \
     }
 
@@ -19,7 +20,7 @@ public:
     // Constructor to initialize window dimensions, scaling factor, and color mode
     DisplayWindow(int width, int height, float scaleFactor, bool isColor)
         : width(width), height(height), scaleFactor(scaleFactor), isColor(isColor),
-          window(nullptr), pbo(0), texture(0), hipResource(nullptr), d_buffer(nullptr) {}
+          window(nullptr), pbo(0), texture(0), cudaResource(nullptr), d_buffer(nullptr) {}
 
     // Destructor to ensure resources are released when the object is destroyed
     ~DisplayWindow() {
@@ -60,23 +61,23 @@ public:
             return false;
         }
 
-        // Check compatibility between OpenGL and HIP
+        // Check compatibility between OpenGL and CUDA
         unsigned int deviceCount;
-        int devices[16];  // Check up to 16 devices
-        
-        HIP_ASSERT(hipGLGetDevices(&deviceCount, devices, 16, hipGLDeviceListAll));
+        int devices[16];    // Check up to 16 devices
+
+        CUDA_ASSERT(cudaGLGetDevices(&deviceCount, devices, 16, cudaGLDeviceListAll));
         if (deviceCount == 0) {
-            std::cerr << "No HIP devices compatible with OpenGL found" << std::endl;
+            std::cerr << "No CUDA devices compatible with OpenGL found" << std::endl;
             return false;
         }
-
+        
         // Get the device ID for the specified device name
         bool deviceFound = false;
         for (unsigned int i = 0; i < deviceCount; i++) {
-            hipDeviceProp_t deviceProp;
-            HIP_ASSERT(hipGetDeviceProperties(&deviceProp, devices[i]));
-            if (deviceName == deviceProp.name) {
-                HIP_ASSERT(hipSetDevice(devices[i]));
+            cudaDeviceProp prop;
+            cudaGetDeviceProperties(&prop, devices[i]);
+            if (deviceName == prop.name) {
+                CUDA_ASSERT(cudaSetDevice(devices[i]));
                 deviceFound = true;
                 break;
             }
@@ -91,13 +92,13 @@ public:
         int numChannels = isColor ? 3 : 1;  // 3 channels for RGB, 1 for grayscale
         GLenum format = isColor ? GL_RGB : GL_LUMINANCE;  // Use GL_RGB for color, GL_LUMINANCE for grayscale
 
-        // Create a Pixel Buffer Object (PBO) to share data between OpenGL and HIP
+        // Create a Pixel Buffer Object (PBO) to share data between OpenGL and CUDA
         glGenBuffers(1, &pbo);
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
         glBufferData(GL_PIXEL_UNPACK_BUFFER, width * height * numChannels * sizeof(float), NULL, GL_DYNAMIC_DRAW);
 
-        // Register the PBO with HIP for interoperability
-        HIP_ASSERT(hipGraphicsGLRegisterBuffer(&hipResource, pbo, hipGraphicsRegisterFlagsWriteDiscard));
+        // Register the PBO with CUDA for interoperability
+        CUDA_ASSERT(cudaGraphicsGLRegisterBuffer(&cudaResource, pbo, cudaGraphicsRegisterFlagsWriteDiscard));
 
         // Create an OpenGL texture to display the tensor data
         glGenTextures(1, &texture);
@@ -111,12 +112,12 @@ public:
         // Enable 2D texturing in OpenGL
         glEnable(GL_TEXTURE_2D);
 
-        // Map the HIP resource once during initialization
-        HIP_ASSERT(hipGraphicsMapResources(1, &hipResource, 0));
+        // Map the CUDA resource once during initialization
+        CUDA_ASSERT(cudaGraphicsMapResources(1, &cudaResource, 0));
 
         // Obtain a pointer to the GPU buffer for the mapped resource
         size_t num_bytes;
-        HIP_ASSERT(hipGraphicsResourceGetMappedPointer((void**)&d_buffer, &num_bytes, hipResource));
+        CUDA_ASSERT(cudaGraphicsResourceGetMappedPointer((void**)&d_buffer, &num_bytes, cudaResource));
 
         return true;
     }
@@ -130,14 +131,11 @@ public:
         // Set the current OpenGL context to the window before rendering
         glfwMakeContextCurrent(window);
 
-        // Disable v-sync to prevent being limited by screen refresh rate
-        glfwSwapInterval(0);
-
         // Determine the number of channels
         int numChannels = isColor ? 3 : 1;
 
         // Copy the GPU tensor data into the PBO (shared with OpenGL)
-        HIP_ASSERT(hipMemcpy(d_buffer, reinterpret_cast<void*>(data_ptr), width * height * numChannels * sizeof(float), hipMemcpyDeviceToDevice));
+        CUDA_ASSERT(cudaMemcpy(d_buffer, reinterpret_cast<void*>(data_ptr), width * height * numChannels * sizeof(float), cudaMemcpyDeviceToDevice));
 
         // Prepare the PBO to display the data in the OpenGL texture
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
@@ -170,11 +168,11 @@ public:
     bool close() {
         std::lock_guard<std::mutex> lock(glfwMutex);  // Ensure thread-safe closing
 
-        // Unmap and unregister the HIP resource
-        if (hipResource) {
-            HIP_ASSERT(hipGraphicsUnmapResources(1, &hipResource, 0));
-            HIP_ASSERT(hipGraphicsUnregisterResource(hipResource));
-            hipResource = nullptr;
+        // Unmap and unregister the CUDA resource
+        if (cudaResource) {
+            CUDA_ASSERT(cudaGraphicsUnmapResources(1, &cudaResource, 0));
+            CUDA_ASSERT(cudaGraphicsUnregisterResource(cudaResource));
+            cudaResource = nullptr;
         }
 
         // Destroy the GLFW window and decrement the window count
@@ -209,8 +207,8 @@ private:
     bool isColor;                       // Indicates if the window is for color display
     GLFWwindow* window;                 // GLFW window object
     GLuint pbo, texture;                // PBO and texture handles
-    hipGraphicsResource_t hipResource;  // HIP-registered resource for the PBO
-    float* d_buffer;                    // Pointer to GPU buffer mapped with HIP
+    cudaGraphicsResource_t cudaResource;  // CUDA-registered resource for the PBO
+    float* d_buffer;                    // Pointer to GPU buffer mapped with CUDA
 
     // Static variables for GLFW management
     static bool glfwInitialized;        // Track if GLFW has been initialized
