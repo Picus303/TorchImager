@@ -43,7 +43,7 @@ setup(
     license="MIT",
     packages=find_packages(),
     cmake_install_dir="TorchImager",
-    cmake_minimum_required_version="3.5",
+    cmake_minimum_required_version="3.18",
     cmake_args=[
         f"-DPYTHON_EXECUTABLE={sys.executable}",
         compiler_choice,
