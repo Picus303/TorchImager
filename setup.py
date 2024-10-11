@@ -34,7 +34,7 @@ if platform.system() != "Linux":
 setup(
     name="TorchImager",
     version="0.2.0",
-    description="A Python library for displaying 2D tensors using OpenGL and HIP interop",
+    description="A Python library for displaying 2D tensors using OpenGL and HIP/CUDA interop",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Picus303",
