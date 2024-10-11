@@ -4,10 +4,11 @@
 #include <GLFW/glfw3.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
+#include <cuda_gl_interop.h>
 #include <iostream>
 #include <mutex>
 
-// Macro to handle CUDA errors and print the error message
+/// Macro to handle CUDA errors and print the error message
 #define CUDA_ASSERT(status) \
     if (status != cudaSuccess) { \
         std::cerr << "CUDA error: " << cudaGetErrorString(status) << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
@@ -61,9 +62,14 @@ public:
         }
 
         // Check compatibility between OpenGL and CUDA
-        int device;
-        CUDA_ASSERT(cudaGLGetDevices(&device, 1, cudaGLDeviceListAll));
-        CUDA_ASSERT(cudaSetDevice(device));
+        unsigned int deviceCount;
+        int devices[1];  // We only care about one device for now
+        CUDA_ASSERT(cudaGLGetDevices(&deviceCount, devices, 1, cudaGLDeviceListAll));
+        if (deviceCount == 0) {
+            std::cerr << "No CUDA devices compatible with OpenGL found" << std::endl;
+            return false;
+        }
+        CUDA_ASSERT(cudaSetDevice(devices[0]));  // Set the CUDA device
 
         // Determine the number of channels and OpenGL texture format
         int numChannels = isColor ? 3 : 1;  // 3 channels for RGB, 1 for grayscale
@@ -179,18 +185,18 @@ public:
     }
 
 private:
-    int width, height;                  	// Window dimensions
-    float scaleFactor;                  	// Scale factor for the window size
-    bool isColor;                       	// Indicates if the window is for color display
-    GLFWwindow* window;                 	// GLFW window object
-    GLuint pbo, texture;                	// PBO and texture handles
-    cudaGraphicsResource_t cudaResource;  	// CUDA-registered resource for the PBO
-    float* d_buffer;                    	// Pointer to GPU buffer mapped with CUDA
+    int width, height;                  // Window dimensions
+    float scaleFactor;                  // Scale factor for the window size
+    bool isColor;                       // Indicates if the window is for color display
+    GLFWwindow* window;                 // GLFW window object
+    GLuint pbo, texture;                // PBO and texture handles
+    cudaGraphicsResource_t cudaResource;  // CUDA-registered resource for the PBO
+    float* d_buffer;                    // Pointer to GPU buffer mapped with CUDA
 
     // Static variables for GLFW management
-    static bool glfwInitialized;        	// Track if GLFW has been initialized
-    static int windowCount;             	// Track the number of active windows
-    static std::mutex glfwMutex;        	// Mutex to ensure thread-safe access to GLFW
+    static bool glfwInitialized;        // Track if GLFW has been initialized
+    static int windowCount;             // Track the number of active windows
+    static std::mutex glfwMutex;        // Mutex to ensure thread-safe access to GLFW
 };
 
 // Initialize static variables
